@@ -30,6 +30,8 @@
   "homepage": "https://github.com/Ynk33/ydl-commands#readme",
   "dependencies": {
     "cli-progress": "^3.12.0",
+    "dotenv": "^16.4.5",
+    "find-up": "^7.0.0",
     "node-docker-api": "^1.1.22",
     "prompts": "^2.4.2",
     "simple-git": "^3.24.0",

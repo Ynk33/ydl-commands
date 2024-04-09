@@ -6,8 +6,6 @@ import { ask, isFolderEmpty } from "../../../utils/helpers.js";
 import { gitClone } from "../../../utils/git.js";
 import run from "../../../utils/bash.js";
 
-const TEMPLATE_REPO = "git@github.com:Ynk33/YankaWordpress";
-
 export default {
   command: "wordpress <projectName> [path]",
   desc: "Create a new Wordpress project",
@@ -23,6 +21,7 @@ export default {
     },
   },
   handler: async (argv) => {
+
     /**
      * HEADER
      */
@@ -108,7 +107,7 @@ export default {
       colorize("The project will be created at ", Colors.FgGreen) +
       projectPath +
       colorize(" using the template ", Colors.FgGreen) +
-      TEMPLATE_REPO
+      process.env.TEMPLATE_REPO
     );
 
     /**
@@ -138,7 +137,7 @@ export default {
 
     // git clone
     console.log(colorize("Cloning the template...", Colors.FgGreen));
-    await gitClone(TEMPLATE_REPO, projectPath, true);
+    await gitClone(process.env.TEMPLATE_REPO, projectPath, true);
 
     // docker compose up
     console.log(colorize("Launch Docker containers...", Colors.FgGreen));
