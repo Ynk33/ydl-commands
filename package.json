@@ -1,0 +1,38 @@
+{
+  "name": "ydl-commands",
+  "version": "1.0.0",
+  "description": "A set of commands by Yanka Dev Lab.",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node --env-file=.env src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "ydl": "src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Ynk33/ydl-commands.git"
+  },
+  "keywords": [
+    "yargs",
+    "commands",
+    "project",
+    "management",
+    "tool"
+  ],
+  "author": "Yannick Tirand",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ynk33/ydl-commands/issues"
+  },
+  "homepage": "https://github.com/Ynk33/ydl-commands#readme",
+  "dependencies": {
+    "cli-progress": "^3.12.0",
+    "node-docker-api": "^1.1.22",
+    "prompts": "^2.4.2",
+    "simple-git": "^3.24.0",
+    "yargs": "^17.7.2"
+  }
+}
