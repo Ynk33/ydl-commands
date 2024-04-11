@@ -9,7 +9,7 @@ YDL is a set of command tools to generate projects for Yanka Dev Lab.
 git clone git@github.com:Ynk33/ydl-commands <your-path>
 ```
 
-- Install the commands
+- Install the dependencies
 ```bash
 cd <your-path>
 npm install -g
@@ -17,13 +17,43 @@ npm install -g
 
 - Add `<your-path>` to your PATH environment variable.
 
-- In the project, copy the .env.sample and rename it .env, and set the `TEMPLATE_REPO` variable to whatever suits your need.
+- In the project, copy the `.env.sample` file, rename it `.env`, and set the environment variables:
+```bash
+GITHUB_AUTH_TOKEN= # your personnal Github Auth Token
 
-And then, your good to go!
+TEMPLATE_WORDPRESS_REPO= # URL of the Wordpress template you want to use
+TEMPLATE_NEXT_REPO= # URL of the Next template you want to use
+```
+
 
 ## Usage
 
-Create a new Wordpress project based on the template defined the env variable `TEMPLATE_REPO`.
+### Wordpress
+
+#### Create a new project based on the `TEMPLATE_WORDPRESS_REPO` env variable:
 ```bash
 ydl project create wordpress <project-name> <path>
 ```
+
+
+### Next
+
+#### Create a project based on the template `TEMPLATE_NEXT_REPO`.
+```bash
+ydl project create next <project-name> <path>
+```
+
+#### Delete a project
+
+:::danger 
+This action is irreversible!
+:::
+
+```bash
+ydl project delete next <project-name>
+```
+
+You will be asked if you also want to delete the associated repo.
+:::info
+You will need the delete permission on this repo to perform this action.
+:::
