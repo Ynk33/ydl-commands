@@ -2,13 +2,18 @@ import fs from "fs";
 import Colors, { colorize } from "../../../utils/colors.js";
 import header from "../../../utils/header.js";
 import DockerUtils from "../../../utils/docker.js";
-import { ask, isFolderEmpty } from "../../../utils/helpers.js";
+import {
+  ask,
+  createFolder,
+  isFolderEmpty,
+  validateCreateProjectData,
+} from "../../../utils/helpers.js";
 import { gitClone } from "../../../utils/git.js";
 import run from "../../../utils/bash.js";
 
 export default {
   command: "wordpress <projectName> [path]",
-  desc: "Create a new Wordpress project",
+  desc: "Create a new Wordpress project based on the YankaWordpress template.",
   builder: {
     projectName: {
       type: "string",
@@ -21,7 +26,6 @@ export default {
     },
   },
   handler: async (argv) => {
-
     /**
      * HEADER
      */
@@ -47,24 +51,8 @@ export default {
 
     // Path
     const projectPath = argv.path + "/" + argv.projectName;
-    if (fs.existsSync(projectPath)) {
-      if (!isFolderEmpty(projectPath)) {
-        console.log(
-          colorize("The folder ", Colors.FgRed) +
-            projectPath +
-            colorize(" already exists and is not empty.", Colors.FgRed)
-        );
-        console.log(
-          "Check again your " +
-            colorize("projectName", Colors.FgBlue) +
-            " and your " +
-            colorize("path", Colors.FgBlue) +
-            "."
-        );
-        console.log();
-
-        return;
-      }
+    if (!createFolder(projectPath)) {
+      return;
     }
 
     // Docker containers
@@ -99,31 +87,14 @@ export default {
 
     console.log(colorize("No Docker container running", Colors.FgGreen));
 
-    // Repo data
-    console.log(
-      colorize("The project name is ", Colors.FgGreen) + argv.projectName
-    );
-    console.log(
-      colorize("The project will be created at ", Colors.FgGreen) +
-      projectPath +
-      colorize(" using the template ", Colors.FgGreen) +
-      process.env.TEMPLATE_REPO
-    );
-
     /**
      * VALIDATION
      */
-
-    console.log();
     if (
-      !(await ask(
-        "Are the information above correct?",
-        "Great, proceeding.",
-        "Ensure you enter the correct " +
-          colorize("projectName", Colors.FgBlue) +
-          colorize(" and the correct ", Colors.FgYellow) +
-          colorize("path", Colors.FgBlue) +
-          colorize(" next time ;)", Colors.FgYellow)
+      !(await validateCreateProjectData(
+        argv.projectName,
+        projectPath,
+        process.env.TEMPLATE_WORDPRESS_REPO
       ))
     ) {
       return;
@@ -137,7 +108,7 @@ export default {
 
     // git clone
     console.log(colorize("Cloning the template...", Colors.FgGreen));
-    await gitClone(process.env.TEMPLATE_REPO, projectPath, true);
+    await gitClone(process.env.TEMPLATE_WORDPRESS_REPO, projectPath, true);
 
     // docker compose up
     console.log(colorize("Launch Docker containers...", Colors.FgGreen));

@@ -35,26 +35,65 @@ const stopGitProgress = (_) => {
   bar.stop();
 };
 
+const git = () =>
+  simpleGit({
+    progress: progress,
+  });
+
 /**
  * Performs a git clone of the repo in the folder to.
  * @param {string} repo Repo to clone
  * @param {string} to Path where to clone to
- * @param {boolean} includeSubmodules If set to true, will call git clone with the flag --recurse-submodules
+ * @param {boolean} includeSubmodules If set to true, will call git clone with the flag --recurse-submodules (default: false)
  */
 export async function gitClone(repo, to, includeSubmodules = false) {
   const options = {
     "--recurse-submodules": includeSubmodules,
+    "--progress": true,
   };
-
-  const git = simpleGit({
-    progress: progress,
-  });
 
   try {
     startGitProgress(4);
-    await git.clone(repo, to, options);
+    await git().clone(repo, to, options);
     stopGitProgress();
   } catch (e) {
     console.error(e);
   }
+}
+
+/**
+ * Set the URL of the named remote.
+ * @param {string} name Name of the remote.
+ * @param {string} url URL of the remote.
+ */
+export async function setRemote(name, url) {
+  await git().raw(["remote", "set-url", name, url]);
+}
+
+/**
+ * Create a new branch and push it on remote.
+ * @param {string} branch Name of the branch to create.
+ * @param {boolean} commit Should a commit be done before pushing? (default: false)
+ */
+export async function createBranch(branch, commit = false) {
+  await git().raw(["branch", branch]).catch(_ => {});
+  await changeBranch(branch);
+  await git().add(".");
+  if (commit) {
+    await git().raw([
+      "commit",
+      "--allow-empty",
+      "-m",
+      "[IGNORE-WEBHOOKS] First commit, project setup",
+    ]);
+  }
+  await git().push("origin", branch, ["--no-verify"]);
+}
+
+/**
+ * Checkout the repo to the branch.
+ * @param {string} branch Branch to move to.
+ */
+export async function changeBranch(branch) {
+  await git().checkout(branch);
 }
