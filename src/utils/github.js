@@ -55,14 +55,15 @@ export async function createRepo(repoName) {
  * @param {string} projectPath Project path.
  */
 export async function addWebhooks(repoName, projectPath) {
-  let hooksConfigPath = `${projectPath}/hooks-config.json`;
-  console.log(`Looking for hooks-config.json in ${projectPath}...`);
+  let hooksConfigPath = `./hooks-config.json`;
+  console.log(`Looking for hooks-config.json...`);
   if (fs.existsSync(hooksConfigPath)) {
     console.log(colorize("hooks-config.json found.", Colors.FgYellow));
+    console.log("Adding webhooks...");
     let hooksConfig = JSON.parse(fs.readFileSync(hooksConfigPath));
     await github().repos.createWebhook(Object.assign(
       {
-        owner: await getUsername(),
+        owner: "Ynk33",
         repo: repoName,
       },
       hooksConfig
@@ -80,8 +81,4 @@ export async function addWebhooks(repoName, projectPath) {
 export async function deleteRepo(repoName) {
 
   await run(`gh repo delete ${repoName} --yes`);
-  // await github().repos.delete({
-  //   owner: await getUsername(),
-  //   repo: repoName
-  // });
 }
