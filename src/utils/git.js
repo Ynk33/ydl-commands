@@ -62,6 +62,15 @@ export async function gitClone(repo, to, includeSubmodules = false) {
 }
 
 /**
+ * Adds a new named remote.
+ * @param {string} name Name of the remote.
+ * @param {string} url URL of the remote.
+ */
+export async function addRemote(name, url) {
+  await git().raw(["remote", "add", name, url]);
+}
+
+/**
  * Set the URL of the named remote.
  * @param {string} name Name of the remote.
  * @param {string} url URL of the remote.

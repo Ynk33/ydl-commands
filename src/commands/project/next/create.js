@@ -1,6 +1,6 @@
 import run from "../../../utils/bash.js";
 import Colors, { colorize } from "../../../utils/colors.js";
-import { changeBranch, createBranch, gitClone, setRemote } from "../../../utils/git.js";
+import { addRemote, changeBranch, createBranch, gitClone, setRemote } from "../../../utils/git.js";
 import { addWebhooks, createRepo, repoExists } from "../../../utils/github.js";
 import header from "../../../utils/header.js";
 import { createFolder, validateCreateProjectData } from "../../../utils/helpers.js";
@@ -26,6 +26,7 @@ export default {
      */
     const projectName = argv.projectName;
     const projectPath = argv.path + "/" + argv.projectName;
+    const templateNextRepo = process.env.TEMPLATE_NEXT_REPO;
 
     /**
      * HEADER
@@ -62,7 +63,7 @@ export default {
       !(await validateCreateProjectData(
         projectName,
         projectPath,
-        process.env.TEMPLATE_NEXT_REPO
+        templateNextRepo
       ))
     ) {
       return;
@@ -76,7 +77,7 @@ export default {
 
     // git clone
     console.log(colorize("Cloning the template...", Colors.FgGreen));
-    await gitClone(process.env.TEMPLATE_NEXT_REPO, projectPath);
+    await gitClone(templateNextRepo, projectPath);
 
     // Moving into the project path
     process.chdir(projectPath);
@@ -99,6 +100,9 @@ export default {
 
     console.log("Updating origin...");
     await setRemote("origin", `git@github.com:Ynk33/${projectName}`);
+
+    console.log("Adding Yankify remote for common updates...");
+    await addRemote("yankify", templateNextRepo);
 
     console.log("Creating main branch...");
     await createBranch("main", true);
