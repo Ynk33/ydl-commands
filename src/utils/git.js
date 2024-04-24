@@ -85,7 +85,9 @@ export async function setRemote(name, url) {
  * @param {boolean} commit Should a commit be done before pushing? (default: false)
  */
 export async function createBranch(branch, commit = false) {
-  await git().raw(["branch", branch]).catch(_ => {});
+  await git()
+    .raw(["branch", branch])
+    .catch((_) => {});
   await changeBranch(branch);
   await git().add(".");
   if (commit) {
@@ -100,9 +102,63 @@ export async function createBranch(branch, commit = false) {
 }
 
 /**
+ * Get the current branch of the repo.
+ * @returns {string | undefined} The current branch.
+ */
+export async function getCurrentBranch() {
+  const branches = await git().branch();
+  let currentBranch = undefined;
+  Object.entries(branches.branches).forEach(([_name, branch]) => {
+    if (branch.current) {
+      currentBranch = branch.name;
+      return;
+    }
+  });
+
+  return currentBranch;
+}
+
+/**
  * Checkout the repo to the branch.
  * @param {string} branch Branch to move to.
  */
 export async function changeBranch(branch) {
   await git().checkout(branch);
+}
+
+/**
+ * Check if the project has the remote.
+ * @param {string} remote Name of the remote.
+ * @returns {boolean} True if the remote exists, false otherwise.
+ */
+export async function hasRemote(remote) {
+  const remotes = await git().remote();
+  return remotes.includes(remote);
+}
+
+/**
+ * Performs a fetch on the remote, with the current branch.
+ * @param {string} remote Name of the remote.
+ */
+export async function gitFetch(remote) {
+  await git().raw("fetch", remote);
+}
+
+/**
+ * Get the list of the commits on the specified {remote}.
+ * @param {string} remote Name of the remote.
+ * @returns List of the last commits.
+ */
+export async function getCommitsList(remote) {
+  const currentBranch = await getCurrentBranch();
+  const commits = await git().log([`${remote}/${currentBranch}`]);
+  return commits.all;
+}
+
+/**
+ * Perform a git cherry-pick on a selection of commits.
+ * @param {Array<string>} commits List of commit's hashes to cherry-pick.
+ */
+export async function cherryPick(commits) {
+  await git().raw("cherry-pick", "--keep-redundant-commits", ...commits);
 }
