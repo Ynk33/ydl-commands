@@ -11,6 +11,8 @@ const github = () => new Octokit({
   auth: process.env.GITHUB_AUTH_TOKEN
 });
 
+const owner = process.env.GITHUB_OWNER;
+
 /**
  * Returns the login of the currently authenticated user.
  * @returns {string} The login of the currently authenticated user.
@@ -63,7 +65,7 @@ export async function addWebhooks(repoName, projectPath) {
     let hooksConfig = JSON.parse(fs.readFileSync(hooksConfigPath));
     await github().repos.createWebhook(Object.assign(
       {
-        owner: "Ynk33",
+        owner: owner,
         repo: repoName,
       },
       hooksConfig

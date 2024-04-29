@@ -27,6 +27,7 @@ export default {
     const projectName = argv.projectName;
     const projectPath = argv.path + "/" + argv.projectName;
     const templateNextRepo = process.env.TEMPLATE_NEXT_REPO;
+    const owner = process.env.GITHUB_OWNER;
 
     /**
      * HEADER
@@ -87,7 +88,7 @@ export default {
     await run("npm install");
 
     // Creating Github environment
-    console.log(`Checking if repo Ynk33/${projectName} already exists...`);
+    console.log(`Checking if repo ${owner}/${projectName} already exists...`);
     if (await repoExists(projectName)) {
       console.log("Repo exists, skipping creation.");
     }
@@ -99,7 +100,7 @@ export default {
     }
 
     console.log("Updating origin...");
-    await setRemote("origin", `git@github.com:Ynk33/${projectName}`);
+    await setRemote("origin", `git@github.com:${owner}/${projectName}`);
 
     console.log("Adding Yankify remote for common updates...");
     await addRemote("yankify", templateNextRepo);

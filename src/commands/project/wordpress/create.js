@@ -1,11 +1,9 @@
-import fs from "fs";
 import Colors, { colorize } from "../../../utils/colors.js";
 import header from "../../../utils/header.js";
 import DockerUtils from "../../../utils/docker.js";
 import {
   ask,
   createFolder,
-  isFolderEmpty,
   validateCreateProjectData,
 } from "../../../utils/helpers.js";
 import { gitClone } from "../../../utils/git.js";

@@ -7,7 +7,13 @@ export default {
   command: "cherry-pick",
   desc: "Perform an assisted git cherry-pick in the current Next project.",
   builder: {},
-  handler: async (argv) => {
+  handler: async (_argv) => {
+
+    /**
+     * VARIABLES
+     */
+    const remote = process.env.TEMPLATE_NEXT_NAME;
+    
     /**
      * HEADER
      */
@@ -16,7 +22,7 @@ export default {
       "Yanka Dev Lab - Git Cherry-Pick",
       [
         colorize("Welcome to the assisted Cherry-Picking.", Colors.FgGreen),
-        "This script will help you cherry-pick some commits from Yankify for your Next project.",
+        `This script will help you cherry-pick some commits from ${remote} for your Next project.`,
       ],
       20
     );
@@ -28,10 +34,10 @@ export default {
     console.log("Checking pre-requisites...");
     console.log();
 
-    if (!(await hasRemote("yankify"))) {
+    if (!(await hasRemote(remote.toLowerCase()))) {
       console.log(
         colorize(
-          `The project doesn't have the remote "yankify". It is not a Next project, or it has a bad configuration.`,
+          `The project doesn't have the remote "${remote}". It is not a Next project, or it has a bad configuration.`,
           Colors.FgRed
         )
       );
@@ -40,7 +46,7 @@ export default {
     }
 
     console.log(
-      colorize(`"Yankify" remote found. Let's proceed...`, Colors.FgGreen)
+      colorize(`"${remote}" remote found. Let's proceed...`, Colors.FgGreen)
     );
     console.log();
 
@@ -48,11 +54,11 @@ export default {
      * COMMITS SELECTION
      */
 
-    console.log(colorize("Fetching on yankify...", Colors.FgYellow));
-    await gitFetch("yankify");
+    console.log(colorize(`Fetching on ${remote}...`, Colors.FgYellow));
+    await gitFetch(remote.toLowerCase());
 
     console.log(colorize("Retrieving commits...", Colors.FgYellow));
-    const lastCommits = await getCommitsList("yankify");
+    const lastCommits = await getCommitsList(remote.toLowerCase());
 
     const commits = await prompts({
       type: "multiselect",
