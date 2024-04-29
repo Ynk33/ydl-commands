@@ -1,6 +1,6 @@
 # YDL commands
 
-YDL is a set of command tools to generate projects for Yanka Dev Lab.
+YDL is a tool set of commands to help with project creation and management.
 
 ## Installation
 
@@ -42,7 +42,7 @@ TEMPLATE_NEXT_REPO="git@github.com:$GITHUB_OWNER/$TEMPLATE_NEXT_NAME"
 
 ### Wordpress
 
-#### Create a new project based on the `TEMPLATE_WORDPRESS_REPO` env variable
+#### Create a new project based on the `TEMPLATE_WORDPRESS_REPO`
 
 ```bash
 ydl project create wordpress <project-name> <path>
