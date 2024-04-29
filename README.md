@@ -59,3 +59,19 @@ You will be asked if you also want to delete the associated repo.
 
 > [!IMPORTANT]
 > You will need the delete permission on this repo to perform this action.
+
+### Git
+
+#### Cherry-pick
+
+This command is a helper for git cherry-pick. It will display a list of commit from which you can choose which ones to cherry-pick.
+> [!IMPORTANT]
+> It has been designed for a repo (A) based on a template stored in another repo (B). In order to work, you will need to define a new remote with the name of the template repo (B) in your repo (A).
+>
+> ```bash
+> git remote add [template repo name] [template repo url]
+> ```
+
+```bash
+ydl git cherry-pick
+```
