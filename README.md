@@ -22,10 +22,20 @@ npm install -g
 - In the project, copy the `.env.sample` file, rename it `.env`, and set the environment variables:
 
 ```bash
-GITHUB_AUTH_TOKEN= # your personnal Github Auth Token
+# Personnal authentication token delivered by Github to use the API.
+GITHUB_AUTH_TOKEN=""
+# User's repo owner.
+GITHUB_OWNER=""
 
-TEMPLATE_WORDPRESS_REPO= # URL of the Wordpress template you want to use
-TEMPLATE_NEXT_REPO= # URL of the Next template you want to use
+# Name of the Wordpress template repo.
+TEMPLATE_WORDPRESS_NAME=""
+# Name of the Next template repo.
+TEMPLATE_NEXT_NAME=""
+
+# Repository where the Wordpress template is stored.
+TEMPLATE_WORDPRESS_REPO="git@github.com:$GITHUB_OWNER/$TEMPLATE_WORDPRESS_NAME"
+# Repository where the Next template is stored.
+TEMPLATE_NEXT_REPO="git@github.com:$GITHUB_OWNER/$TEMPLATE_NEXT_NAME"
 ```
 
 ## Usage
