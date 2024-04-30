@@ -147,11 +147,16 @@ export async function gitFetch(remote) {
 /**
  * Get the list of the commits on the specified {remote}.
  * @param {string} remote Name of the remote.
+ * @param {number} limit Number of commits to retrieve.
  * @returns List of the last commits.
  */
-export async function getCommitsList(remote) {
+export async function getCommitsList(remote, limit = 10) {
   const currentBranch = await getCurrentBranch();
-  const commits = await git().log([`${remote}/${currentBranch}`]);
+  let options = {
+    maxCount: limit,
+    [`${remote}/${currentBranch}`]: true,
+  };
+  const commits = await git().log(options);
   return commits.all;
 }
 
