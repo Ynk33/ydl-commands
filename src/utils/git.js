@@ -139,19 +139,25 @@ export async function hasRemote(remote) {
 /**
  * Performs a fetch on the remote, with the current branch.
  * @param {string} remote Name of the remote.
+ * @param {string} branch Name of the branch to fetch.
  */
-export async function gitFetch(remote) {
-  await git().raw("fetch", remote);
+export async function gitFetch(remote, branch = "") {
+  await git().raw("fetch", remote, branch);
 }
 
 /**
  * Get the list of the commits on the specified {remote}.
  * @param {string} remote Name of the remote.
+ * @param {string} branch Name of the branch.
  * @param {number} limit Number of commits to retrieve.
  * @returns List of the last commits.
  */
-export async function getCommitsList(remote, limit = 10) {
-  const currentBranch = await getCurrentBranch();
+export async function getCommitsList(remote, branch = undefined, limit = 10) {
+  let currentBranch = branch;
+  if (currentBranch === undefined) {
+    currentBranch = await getCurrentBranch();
+  }
+
   let options = {
     maxCount: limit,
     [`${remote}/${currentBranch}`]: true,

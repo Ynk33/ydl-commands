@@ -4,12 +4,16 @@ import { cherryPick, getCommitsList, gitFetch, hasRemote } from "../../utils/git
 import header from "../../utils/header.js";
 
 export default {
-  command: "cherry-pick <remote>",
+  command: "cherry-pick <remote> [branch]",
   desc: "Perform an assisted git cherry-pick.",
   builder: {
     remote: {
       type: "string",
       desc: "Name of the remote you want to cherry-pick from.",
+    },
+    branch: {
+      type: "string",
+      desc: "Name of the branch you want to cherry-pick from.",
     },
   },
   handler: async (argv) => {
@@ -18,6 +22,7 @@ export default {
      * VARIABLES
      */
     const remote = argv.remote;
+    const branch = argv.branch;
     
     /**
      * HEADER
@@ -39,10 +44,10 @@ export default {
     console.log("Checking pre-requisites...");
     console.log();
 
-    if (!(await hasRemote(remote.toLowerCase()))) {
+    if (!(await hasRemote(remote))) {
       console.log(
         colorize(
-          `The project doesn't have the remote "${remote}". It is not a Next project, or it has a bad configuration.`,
+          `The project doesn't have the remote "${remote}".`,
           Colors.FgRed
         )
       );
@@ -59,12 +64,12 @@ export default {
      * COMMITS SELECTION
      */
 
-    console.log(colorize(`Fetching on ${remote}...`, Colors.FgYellow));
-    await gitFetch(remote.toLowerCase());
+    console.log(colorize(`Fetching on ${remote}${branch ? '/' + branch : ''}...`, Colors.FgYellow));
+    await gitFetch(remote, branch);
 
-    console.log(colorize("Retrieving commits...", Colors.FgYellow));
-    const lastCommits = await getCommitsList('origin', 50);
-    let lastCommitsOnRemote = await getCommitsList(remote.toLowerCase(), 10);
+    console.log(colorize("Reading commits...", Colors.FgYellow));
+    const lastCommits = await getCommitsList('origin', branch, 50);
+    let lastCommitsOnRemote = await getCommitsList(remote, branch, 10);
 
     // Mark the commits that are already applied
     for (let i = 0; i < lastCommitsOnRemote.length; i++) {
