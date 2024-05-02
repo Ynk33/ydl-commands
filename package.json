@@ -37,5 +37,8 @@
     "prompts": "^2.4.2",
     "simple-git": "^3.24.0",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "dotenv-expand": "^11.0.6"
   }
 }
