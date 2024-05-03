@@ -1,6 +1,6 @@
 import { Docker } from "node-docker-api";
 import { Container } from "node-docker-api/lib/container.js";
-import run from "./bash.js";
+import run, { runAndReturn } from "./bash.js";
 
 /**
  * @class A set of helping functions to interact with Docker.
@@ -32,6 +32,53 @@ class DockerUtils {
   }
 
   /**
+   * Get the name of the currently running Wordpress container, if any.
+   * @returns {string|undefined} The name of the currently running Wordpress container, if any.
+   */
+  async getCurrentWordpressContainer() {
+    let containers = await this.getRunningContainers();
+
+    for (let i = 0; i < containers.length; i++) {
+      const container = containers[i];
+      const name = container.data.Names[0].slice(1);
+      if (name.includes('-wordpress-')) {
+        return name;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Get the name of the currently running Database container, if any.
+   * @returns {string|undefined} The name of the currently running Database container, if any.
+   */
+  async getCurrentDBContainer() {
+    let containers = await this.getRunningContainers();
+
+    for (let i = 0; i < containers.length; i++) {
+      const container = containers[i];
+      const name = container.data.Names[0].slice(1);
+      if (name.includes('-db-')) {
+        return name;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Get the IP address of the currently running Database container.
+   * @returns The IP address of the currently running Database container.
+   */
+  async getDbContainerIpAddress() {
+    const dbContainerName = await this.getCurrentDBContainer();
+    let ipAddress = await runAndReturn(`docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${dbContainerName}`);
+    ipAddress = ipAddress.replace(/'/g, "");
+    return ipAddress;
+  }
+
+  /**
    * Stops all the provided Docker containers.
    * @param {Array<Container>} containers The Docker containers to stop.
    */
@@ -47,7 +94,7 @@ class DockerUtils {
    */
   async deleteContainers(containers) {
     containers.forEach(async container => {
-      await container.delete();
+      await container.delete({ force: true });
     })
   }
 

@@ -87,6 +87,17 @@ export function createFolder(folderPath) {
 }
 
 /**
+ * Sleep for a certain amount of time.
+ * @param {number} ms Duration to sleep for.
+ * @returns A Promise to wait for.
+ */
+export function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/**
  * Display the project data to the user and ask for its validation.
  * @param {string} projectName Name of the project
  * @param {string} projectPath Path of the project
@@ -128,6 +139,28 @@ export async function validateDeleteProjectData(projectName) {
     colorize("The project ", Colors.FgGreen) +
       projectName +
       colorize(" will be deleted", Colors.FgGreen)
+  );
+
+  console.log();
+  return await ask(
+    "Are you sure about this?",
+    "Great, proceeding.",
+    "No worries. Cancelling."
+  );
+}
+
+/**
+ * Ask the user to confirm the migration.
+ * @param {string} fromProject Path to the project the migration should start.
+ * @param {string} fromDatabase Name of the database the migration should start.
+ * @param {string} toProject Path to the project the migration should be applied to.
+ * @param {string} toDatabase Name of the database the migration should be applied to.
+ * @returns {boolean} True if the user confirmed the migration. False otherwise.
+ */
+export async function validateMigrationData(fromProject, fromDatabase, toProject, toDatabase ) {
+  console.log(
+    colorize("The database ", Colors.FgGreen) + fromProject + "." + fromDatabase +
+    colorize(" will be migrated to the database ", Colors.FgGreen) + toProject + "." + toDatabase
   );
 
   console.log();

@@ -8,6 +8,7 @@ import project from "./commands/project.js";
 import path from "path";
 import test from "./commands/test.js";
 import git from "./commands/git.js";
+import db from "./commands/db.js";
 
 const envPath = path.dirname(process.argv[1]) + "/../.env";
 dotenvExpand.expand(dotenv.config({ path: envPath }));
@@ -15,6 +16,7 @@ dotenvExpand.expand(dotenv.config({ path: envPath }));
 let ydl = await yargs(hideBin(process.argv))
   .command(project)
   .command(git)
+  .command(db)
   .command(test);
 
 ydl = ydl.demandCommand()
