@@ -8,12 +8,11 @@ import prompts from "prompts";
 import { resolve } from "path";
 
 export default {
-  command: "migrate [from] [to]",
-  desc: "Migrate the database in the Docker container at [from] to the database in the Docker container at [to].",
+  command: "migrate <from> [to]",
+  desc: "Migrate the database from the project <from> to the project [to].",
   builder: {
     from: {
       type: "string",
-      default: ".",
       desc: "Path to the directory of the Docker container to migrate the db from.",
     },
     to: {
@@ -32,7 +31,6 @@ export default {
     const fromAbs = resolve(from);
     const toAbs = resolve(to);
 
-
     const fromName = getProjectName(fromAbs);
     const toName = getProjectName(toAbs);
 
@@ -45,8 +43,7 @@ export default {
       [
         colorize("Welcome to the Database Migration command.", Colors.FgGreen),
         `This script will migrate the database from ${fromName} to ${toName}.`,
-      ],
-      20
+      ]
     );
 
     /**
@@ -82,6 +79,19 @@ export default {
       console.log("Abort.");
       return;
     }
+    
+    // Getting database connection info
+    console.log(colorize(`Fetching database informations for ${fromName}...`, Colors.FgGreen));
+    const dockerComposeFrom = fs.readFileSync(`${fromAbs}/docker-compose.yml`, { encoding: "utf8" });
+    const fromDatabase = dockerComposeFrom.match(/- WORDPRESS_DB_NAME=(.*)/m)[1];
+    const fromUsername = dockerComposeFrom.match(/- WORDPRESS_DB_PASSWORD=(.*)/m)[1];
+    const fromPassword = dockerComposeFrom.match(/- WORDPRESS_DB_USER=(.*)/m)[1];
+    
+    console.log(colorize(`Fetching database informations for ${toName}...`, Colors.FgGreen));
+    const dockerComposeTo = fs.readFileSync(`${toAbs}/docker-compose.yml`, { encoding: "utf8" });
+    const toDatabase = dockerComposeTo.match(/- WORDPRESS_DB_NAME=(.*)/m)[1];
+    const toUsername = dockerComposeTo.match(/- WORDPRESS_DB_PASSWORD=(.*)/m)[1];
+    const toPassword = dockerComposeTo.match(/- WORDPRESS_DB_USER=(.*)/m)[1];
 
     // Turning off running Docker containers
     let docker = new DockerUtils();
@@ -112,80 +122,6 @@ export default {
       console.log(colorize("Done.", Colors.FgGreen));
       console.log();
     }
-    
-    /**
-     * USERNAME & PASSWORDS
-     */
-
-    console.log(colorize("Please, provide the access to the databases of the two projects", Colors.FgYellow));
-    console.log();
-
-    // from
-    console.log(`Access to ${fromName} database:`);
-
-    let response = await prompts(
-      [
-        {
-          type: 'text',
-          name: 'database',
-          message: `Name of the Database of ${fromName}:`
-        },
-        {
-          type: 'text',
-          name: 'username',
-          message: prev => `Username for ${prev}:`
-        },
-        {
-          type: 'password',
-          name: 'password',
-          message: prev => `Password for ${prev}:`
-        }
-      ],
-      {
-        onCancel: _prompt => {
-          process.exit(0);
-        }
-      }
-    );
-    const fromDatabase = response.database;
-    const fromUsername = response.username;
-    const fromPassword = response.password;
-
-    console.log();
-
-    // to
-    console.log(`Access to ${toName} database:`);
-
-    response = await prompts(
-      [
-        {
-          type: 'text',
-          name: 'database',
-          message: `Name of the Database of ${toName}:`
-        },
-        {
-          type: 'text',
-          name: 'username',
-          message: prev => `Username for ${prev}:`
-        },
-        {
-          type: 'password',
-          name: 'password',
-          message: prev => `Password for ${prev}:`
-        }
-      ],
-      {
-        onCancel: _prompt => {
-          process.exit(0);
-        }
-      }
-    );
-    const toDatabase = response.database;
-    const toUsername = response.username;
-    const toPassword = response.password;
-
-    console.log();
-
 
     /**
      * VALIDATION
@@ -227,13 +163,6 @@ export default {
     fileContent = fileContent.replaceAll(`\`${fromDatabase}\``, `\`${toDatabase}\``);
     fs.writeFileSync(`${toAbs}/temp_dump.sql`, fileContent, 'utf8');
 
-    /*
-    // Copy apply-dump.sh to destination
-    console.log(colorize(`Copy necessary script to ${toName}...`, Colors.FgGreen));
-    const pathToScript = `${process.env.ROOT_PATH}/src/scripts/apply-dump.sh`;
-    fs.copyFileSync(pathToScript, `${toAbs}/apply-dump.sh`);
-    */
-
     // Run the Docker containers 'to'
     console.log(colorize(`Launch Docker containers of ${toName}...`, Colors.FgGreen));
     process.chdir(toAbs);
@@ -248,22 +177,9 @@ export default {
     const toDbIpaddress = await docker.getDbContainerIpAddress();
 
     console.log(colorize(`Apply the migration to the database of ${toName}...`, Colors.FgGreen));
-    /*
-    const truncateCommand = `docker exec ${toWordpressContainerName} bash -c "mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} -Nse 'show tables' wordpress | while read table; do mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} -e "TRUNCATE TABLE $table" wordpress; done"`;
-    const applyDumpCommand = `docker exec ${toWordpressContainerName} bash -c "mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} wordpress < temp_dump.sql"`;
-
-    console.log(colorize(`Truncate the tables of the database of ${toName}...`, Colors.FgGreen));
-    await run(truncateCommand);
-    console.log(colorize(`Apply the dump to the database of ${toName}...`, Colors.FgGreen));
-    await run(applyDumpCommand);
-    */
-    /*
-    const migrationCommand = `docker exec ${toWordpressContainerName} bash -c "./apply-dump.sh ${toDbIpaddress} ${toUsername} ${toPassword}"`;
-    await run(migrationCommand);
-    */
-
     const dropDatabaseCommand = `docker exec ${toWordpressContainerName} bash -c "mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} -e 'DROP DATABASE ${toDatabase};'"`;
     const applyMigrationCommand = `docker exec ${toWordpressContainerName} bash -c "mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} < temp_dump.sql"`; 
+    
     try {
       await run(dropDatabaseCommand);
     }
@@ -277,11 +193,14 @@ export default {
     await docker.dockerComposeDown();
 
     // Cleaning temp files
-    console.log(colorize(`Cleaning dump from ${toName}...`, Colors.FgGreen));
+    console.log(colorize(`Cleaning the migration file from ${toName}...`, Colors.FgGreen));
     fs.rmSync(`${toAbs}/temp_dump.sql`);
-    //fs.rmSync(`${toAbs}/apply-dump.sh`);
 
-    // End
+    /**
+     * END
+     */
+    console.log();
+    console.log(colorize("Migration completed!", Colors.FgGreen));
   },
 };
 

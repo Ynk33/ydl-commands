@@ -5,7 +5,7 @@
  * @param {number} margin Number of characters to wrap aroung the title.
  * @param {char} char Character to use as a wrapper, for the decoration.
  */
-export default function header(title, messages = [], margin = 5, char = "#") {
+export default function header(title, messages = [], margin = 20, char = "#") {
 
   // Decorate the title
   title = createLine(margin, char) + " " + title + " " + createLine(margin, char);

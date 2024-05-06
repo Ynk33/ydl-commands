@@ -38,8 +38,7 @@ export default {
       [
         colorize("Welcome to the Delete Next Project script.", Colors.FgGreen),
         "This script will delete a Next project.",
-      ],
-      20
+      ]
     );
 
     /**

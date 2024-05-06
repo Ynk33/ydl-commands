@@ -33,8 +33,7 @@ export default {
       [
         colorize("Welcome to the assisted Cherry-Picking.", Colors.FgGreen),
         `This script will help you cherry-pick some commits from ${remote}.`,
-      ],
-      20
+      ]
     );
 
     /**

@@ -1,3 +1,4 @@
+import migrateRemote from "./db/migrate-remote.js";
 import migrate from "./db/migrate.js";
 
 export default {
@@ -5,7 +6,8 @@ export default {
   desc: 'Database related commands',
   builder: yargs => {
     return yargs
-      .command(migrate);
+      .command(migrate)
+      .command(migrateRemote);
   },
   handler: _ => {}
 }

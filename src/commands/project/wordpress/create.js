@@ -36,8 +36,7 @@ export default {
           Colors.FgGreen
         ),
         "This script will create a new Wordpress project based on the YankaWordpress template.",
-      ],
-      20
+      ]
     );
 
     /**

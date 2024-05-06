@@ -41,8 +41,7 @@ export default {
           Colors.FgGreen
         ),
         "This script will create a new Next project based on the Yankify template.",
-      ],
-      20
+      ]
     );
 
     /**
