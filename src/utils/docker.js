@@ -1,6 +1,7 @@
 import { Docker } from "node-docker-api";
 import { Container } from "node-docker-api/lib/container.js";
 import run, { runAndReturn } from "./bash.js";
+import Colors, { colorize } from "./colors.js";
 
 /**
  * @class A set of helping functions to interact with Docker.

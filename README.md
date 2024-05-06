@@ -84,4 +84,4 @@ ydl git cherry-pick <remote> [branch]
 ```
 
 > [!IMPORTANT]
-> If `branch` is not specified, it will perform the cherry-pick from the branch you currently are.
+> If `branch` is not specified, the current branch will be used for the remote.

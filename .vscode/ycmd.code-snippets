@@ -50,7 +50,7 @@
 			"\t\t\t\t\"Yanka Dev Lab - MY_COMMAND_TITLE\",",
 			"\t\t\t\t\t[",
 			"\t\t\t\t\t\tcolorize(\"Welcome to MY_COMMAND_TITLE command.\", Colors.FgGreen),",
-			"\t\t\t\t\t\t\"MY_COMMAND_DESCRIPTION\",",
+			"\t\t\t\t\t\t`MY_COMMAND_DESCRIPTION`,",
 			"\t\t\t\t\t]",
 			"\t\t\t);",
 			"\t\t",

@@ -229,18 +229,7 @@ export default {
     fs.rmSync(`${fromPath}/temp_dump.sql`);
 
     console.log(colorize(`Cleaning the migration file from ${toName}...`, Colors.FgGreen));
-    let cleanError;
-    await sshConnection.exec('rm', [`temp_dump.sql`], {
-      cwd: toPath,
-      onStderr(error) {
-        cleanError = error.toString("utf8");
-      }
-    });
-    if (cleanError !== undefined) {
-      console.log(colorize(cleanError, Colors.FgRed));
-      sshConnection.dispose();
-      return;
-    }
+    await sshConnection.exec('rm', [`${toPath}/temp_dump.sql`]);
 
     // Close SSH connection
     console.log(colorize(`Closing SSH connection...`, Colors.FgGreen));
