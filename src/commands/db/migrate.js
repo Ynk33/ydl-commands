@@ -4,11 +4,10 @@ import DockerUtils from "../../utils/docker.js";
 import header from "../../utils/header.js";
 import { ask, sleep, validateMigrationData } from "../../utils/helpers.js";
 import run from "../../utils/bash.js";
-import prompts from "prompts";
 import { resolve } from "path";
 
 export default {
-  command: "migrate <from> [to]",
+  command: "migrate <from> [to] [-s|--silent]",
   desc: "Migrate the database from the project <from> to the project [to].",
   builder: {
     from: {
@@ -20,6 +19,12 @@ export default {
       default: ".",
       desc: "Path to the directory of the Docker container to apply the migration to.",
     },
+    silent: {
+      type: "boolean",
+      default: false,
+      desc: "If specified, the command will not ask any question.",
+      alias: "s",
+    }
   },
   handler: async (argv) => {
     /**
@@ -33,6 +38,8 @@ export default {
 
     const fromName = getProjectName(fromAbs);
     const toName = getProjectName(toAbs);
+
+    const silent = argv.silent;
 
     /**
      * HEADER
@@ -106,14 +113,16 @@ export default {
           Colors.FgYellow
         )
       );
-      if (
-        !(await ask(
-          "Is it safe to remove these containers?",
-          "Great, proceeding.",
-          "Ensure those containers are not running or that they can be safely removed, and then launch the script again."
-        ))
-      ) {
-        return;
+      if (!silent) {
+        if (
+          !(await ask(
+            "Is it safe to remove these containers?",
+            "Great, proceeding.",
+            "Ensure those containers are not running or that they can be safely removed, and then launch the script again."
+          ))
+        ) {
+          return;
+        }
       }
 
       console.log("Stopping and removing container...");
@@ -126,8 +135,10 @@ export default {
     /**
      * VALIDATION
      */
-    if (!(await validateMigrationData(fromName, fromDatabase, toName, toDatabase))) {
-      return;
+    if (!silent) {
+      if (!(await validateMigrationData(fromName, fromDatabase, toName, toDatabase))) {
+        return;
+      }
     }
 
     /**

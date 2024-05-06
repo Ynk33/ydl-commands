@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import yargs from "yargs"
-import { hideBin } from "yargs/helpers"
 import dotenv from "dotenv";
 import dotenvExpand from "dotenv-expand";
-import project from "./commands/project.js";
+import yargs from "yargs"
+import { hideBin } from "yargs/helpers"
 import path from "path";
+import project from "./commands/project.js";
 import test from "./commands/test.js";
 import git from "./commands/git.js";
 import db from "./commands/db.js";

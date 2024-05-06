@@ -1,3 +1,4 @@
+import fs from "fs";
 import Colors, { colorize } from "../../../utils/colors.js";
 import header from "../../../utils/header.js";
 import DockerUtils from "../../../utils/docker.js";
@@ -6,7 +7,9 @@ import {
   createFolder,
   validateCreateProjectData,
 } from "../../../utils/helpers.js";
-import { gitClone } from "../../../utils/git.js";
+import { addRemote, changeBranch, createBranch, gitClone, setRemote } from "../../../utils/git.js";
+import { addWebhooks, createRepo, repoExists } from "../../../utils/github.js";
+import prompts from "prompts";
 import run from "../../../utils/bash.js";
 
 export default {
@@ -24,6 +27,16 @@ export default {
     },
   },
   handler: async (argv) => {
+
+    /**
+     * VARIABLES
+     */
+    
+    const projectName = argv.projectName;
+    const projectPath = argv.path + "/" + argv.projectName;
+    const templateWordpressRepo = process.env.TEMPLATE_WORDPRESS_REPO;
+    const owner = process.env.GITHUB_OWNER;
+
     /**
      * HEADER
      */
@@ -47,7 +60,6 @@ export default {
     console.log();
 
     // Path
-    const projectPath = argv.path + "/" + argv.projectName;
     if (!createFolder(projectPath)) {
       return;
     }
@@ -89,9 +101,9 @@ export default {
      */
     if (
       !(await validateCreateProjectData(
-        argv.projectName,
+        projectName,
         projectPath,
-        process.env.TEMPLATE_WORDPRESS_REPO
+        templateWordpressRepo
       ))
     ) {
       return;
@@ -105,27 +117,48 @@ export default {
 
     // git clone
     console.log(colorize("Cloning the template...", Colors.FgGreen));
-    await gitClone(process.env.TEMPLATE_WORDPRESS_REPO, projectPath, true);
-
-    // docker compose up
-    console.log(colorize("Launch Docker containers...", Colors.FgGreen));
+    await gitClone(templateWordpressRepo, projectPath, true);
     process.chdir(projectPath);
-    await docker.dockerComposeUp();
 
-    // setup.sh
-    console.log(colorize("Running setup.sh...", Colors.FgGreen));
-    await run("sh ./setup.sh --silent", false);
+    // Creating Github environment
+    console.log(`Checking if repo ${owner}/${projectName} already exists...`);
+    if (await repoExists(projectName)) {
+      console.log("Repo exists, skipping creation.");
+    }
+    else {
+      console.log("Repo does not exist, creating it...");
+      await createRepo(projectName);
+      console.log("Adding webhooks...");
+      await addWebhooks(projectName);
+    }
 
-    /**
-     * CLEAN UP
-     */
+    console.log("Updating origin...");
+    await setRemote("origin", `git@github.com:${owner}/${projectName}`);
 
+    console.log("Adding YankaWordpress remote for common updates...");
+    await addRemote("yankawordpress", templateWordpressRepo);
+
+    console.log("Creating main branch...");
+    await createBranch("main", true);
+    
+    console.log("Creating develop branch...");
+    await createBranch("develop");
+    await changeBranch("main");
+
+    console.log(colorize("Done.", Colors.FgGreen));
     console.log();
-    console.log("Clean up...");
 
-    // docker compose down
-    console.log(colorize("Remove Docker containers...", Colors.FgGreen));
-    await docker.dockerComposeDown();
+    // Migrate YankaWordpress DB to this project
+    const response = await prompts({
+      type: "text",
+      name: "templatePath",
+      message: `Where is your installation of ${templateWordpressRepo} (pwd: ${process.cwd()})?`,
+      validate: templatePath => !fs.existsSync(templatePath) ? `Template not found at ${templatePath}` : true
+    });
+    const fromPath = response.templatePath;
+
+    console.log("Setting up the database...");
+    await run(`ydl db migrate ${fromPath} . --silent`);
 
     /**
      * THE END

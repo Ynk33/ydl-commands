@@ -11,7 +11,7 @@ const github = () => new Octokit({
   auth: process.env.GITHUB_AUTH_TOKEN
 });
 
-const owner = process.env.GITHUB_OWNER;
+const owner = () => process.env.GITHUB_OWNER;
 
 /**
  * Returns the login of the currently authenticated user.
@@ -54,9 +54,8 @@ export async function createRepo(repoName) {
 /**
  * If exists, add the webhook defined in the project's hooks-config.json to the repo. Do nothing if the file doesn't exists.
  * @param {string} repoName Name of the repo.
- * @param {string} projectPath Project path.
  */
-export async function addWebhooks(repoName, projectPath) {
+export async function addWebhooks(repoName) {
   let hooksConfigPath = `./hooks-config.json`;
   console.log(`Looking for hooks-config.json...`);
   if (fs.existsSync(hooksConfigPath)) {
@@ -65,7 +64,7 @@ export async function addWebhooks(repoName, projectPath) {
     let hooksConfig = JSON.parse(fs.readFileSync(hooksConfigPath));
     await github().repos.createWebhook(Object.assign(
       {
-        owner: owner,
+        owner: owner(),
         repo: repoName,
       },
       hooksConfig

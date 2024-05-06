@@ -95,7 +95,7 @@ export default {
       console.log("Repo does not exist, creating it...");
       await createRepo(projectName);
       console.log("Adding webhooks...");
-      await addWebhooks(projectName, projectPath);
+      await addWebhooks(projectName);
     }
 
     console.log("Updating origin...");
