@@ -89,7 +89,7 @@ export function createFolder(folderPath) {
 /**
  * Sleep for a certain amount of time.
  * @param {number} ms Duration to sleep for.
- * @returns A Promise to wait for.
+ * @returns {Promise<void>} A Promise to wait for.
  */
 export function sleep(ms) {
   return new Promise((resolve) => {
@@ -102,7 +102,7 @@ export function sleep(ms) {
  * @param {string} projectName Name of the project
  * @param {string} projectPath Path of the project
  * @param {string} templateRepo Repo of the template to use to create the project
- * @returns True if the user confirmed all the data are correct. False otherwise.
+ * @returns {Promise<boolean>} True if the user confirmed all the data are correct. False otherwise.
  */
 export async function validateCreateProjectData(
   projectName,
@@ -132,7 +132,7 @@ export async function validateCreateProjectData(
 /**
  * Ask the user to confirm the deletion of the project.
  * @param {string} projectName Name of the project.
- * @returns {boolean} True if the user confirmed the deletion. False otherwise.
+ * @returns {Promise<boolean>} True if the user confirmed the deletion. False otherwise.
  */
 export async function validateDeleteProjectData(projectName) {
   console.log(
@@ -155,7 +155,7 @@ export async function validateDeleteProjectData(projectName) {
  * @param {string} fromDatabase Name of the database the migration should start.
  * @param {string} toProject Path to the project the migration should be applied to.
  * @param {string} toDatabase Name of the database the migration should be applied to.
- * @returns {boolean} True if the user confirmed the migration. False otherwise.
+ * @returns {Promise<boolean>} True if the user confirmed the migration. False otherwise.
  */
 export async function validateMigrationData(fromProject, fromDatabase, toProject, toDatabase ) {
   console.log(

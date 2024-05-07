@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import fs from "fs";
 import Colors, { colorize } from "./colors.js";
-import run from "./bash.js";
+import { run } from "./bash.js";
 
 /**
  * Authenticate to Github and returns a Github object to interact with the Github API.

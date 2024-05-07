@@ -1,3 +1,5 @@
+import DockerUtils from "../utils/docker.js"
+
 export default {
   command: "test [arg]",
   desc: "Test command.",
@@ -8,5 +10,7 @@ export default {
     },
   },
   handler: async (argv) => {
+    const docker = await DockerUtils.create();
+    await docker.safelyRemoveContainers();
   }
 }

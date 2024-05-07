@@ -1,10 +1,8 @@
-import fs from "fs";
 import Colors, { colorize } from "../../utils/colors.js";
 import DockerUtils from "../../utils/docker.js";
 import header from "../../utils/header.js";
-import { ask, sleep, validateMigrationData } from "../../utils/helpers.js";
-import run from "../../utils/bash.js";
-import { resolve } from "path";
+import { validateMigrationData } from "../../utils/helpers.js";
+import Project from "../../classes/project.js";
 
 export default {
   command: "migrate <from> [to] [-s|--silent]",
@@ -24,48 +22,44 @@ export default {
       default: false,
       desc: "If specified, the command will not ask any question.",
       alias: "s",
-    }
+    },
   },
   handler: async (argv) => {
     /**
      * VARIABLES
      */
-    const from = argv.from;
-    const to = argv.to;
-
-    const fromAbs = resolve(from);
-    const toAbs = resolve(to);
-
-    const fromName = getProjectName(fromAbs);
-    const toName = getProjectName(toAbs);
+    const fromProject = new Project(argv.from);
+    const toProject = new Project(argv.to);
 
     const silent = argv.silent;
+
+    const docker = await DockerUtils.create();
+
+    const migrationFile = "temp_dump.sql";
 
     /**
      * HEADER
      */
 
-    header(
-      "Yanka Dev Lab - Database Migration",
-      [
-        colorize("Welcome to the Database Migration command.", Colors.FgGreen),
-        `This script will migrate the database from ${fromName} to ${toName}.`,
-      ]
-    );
+    header("Yanka Dev Lab - Database Migration", [
+      colorize("Welcome to the Database Migration command.", Colors.FgGreen),
+      `This script will migrate the database from ${fromProject.name} to ${toProject.name}.`,
+    ]);
 
     /**
      * PRE-REQUISITE
      */
 
-    console.log("Checking pre-requisites...");
+    console.log(colorize("Checking pre-requisites...", Colors.FgYellow));
     console.log();
 
     // Check the options
-    if (fromAbs === toAbs) {
+    console.log("Checking arguments...");
+    if (fromProject.path === toProject.path) {
       console.log(
         colorize(
           "You specified the same [from] and [to] options.",
-          Colors.FgYellow
+          Colors.FgRed
         )
       );
       console.log("Abort.");
@@ -73,9 +67,9 @@ export default {
     }
 
     // Does the projects have any Docker container?
+    console.log("Checking projects Docker containers...");
     if (
-      !fs.existsSync(fromAbs + "/docker-compose.yml") ||
-      !fs.existsSync(toAbs + "/docker-compose.yml")
+      !(fromProject.hasADockerContainer() && toProject.hasADockerContainer())
     ) {
       console.log(
         colorize(
@@ -86,57 +80,29 @@ export default {
       console.log("Abort.");
       return;
     }
-    
-    // Getting database connection info
-    console.log(colorize(`Fetching database informations for ${fromName}...`, Colors.FgGreen));
-    const dockerComposeFrom = fs.readFileSync(`${fromAbs}/docker-compose.yml`, { encoding: "utf8" });
-    const fromDatabase = dockerComposeFrom.match(/- WORDPRESS_DB_NAME=(.*)/m)[1];
-    const fromUsername = dockerComposeFrom.match(/- WORDPRESS_DB_PASSWORD=(.*)/m)[1];
-    const fromPassword = dockerComposeFrom.match(/- WORDPRESS_DB_USER=(.*)/m)[1];
-    
-    console.log(colorize(`Fetching database informations for ${toName}...`, Colors.FgGreen));
-    const dockerComposeTo = fs.readFileSync(`${toAbs}/docker-compose.yml`, { encoding: "utf8" });
-    const toDatabase = dockerComposeTo.match(/- WORDPRESS_DB_NAME=(.*)/m)[1];
-    const toUsername = dockerComposeTo.match(/- WORDPRESS_DB_PASSWORD=(.*)/m)[1];
-    const toPassword = dockerComposeTo.match(/- WORDPRESS_DB_USER=(.*)/m)[1];
 
-    // Turning off running Docker containers
-    let docker = new DockerUtils();
-    let containers = await docker.getRunningContainers();
-    if (containers.length > 0) {
-      console.log(
-        colorize("You have some Docker containers running.", Colors.FgRed)
-      );
-      console.log(
-        colorize(
-          "In order to perform the migration, all the containers first need to be turned off.",
-          Colors.FgYellow
-        )
-      );
-      if (!silent) {
-        if (
-          !(await ask(
-            "Is it safe to remove these containers?",
-            "Great, proceeding.",
-            "Ensure those containers are not running or that they can be safely removed, and then launch the script again."
-          ))
-        ) {
-          return;
-        }
-      }
-
-      console.log("Stopping and removing container...");
-      await docker.stopContainers(containers);
-      await docker.deleteContainers(containers);
-      console.log(colorize("Done.", Colors.FgGreen));
-      console.log();
+    // Turning off any running Docker containers
+    console.log("Checking running Docker containers...");
+    if (!(await docker.safelyRemoveContainers(silent))) {
+      return;
     }
+
+    console.log();
+    console.log(colorize("Everything is ready.", Colors.FgGreen));
+    console.log();
 
     /**
      * VALIDATION
      */
     if (!silent) {
-      if (!(await validateMigrationData(fromName, fromDatabase, toName, toDatabase))) {
+      if (
+        !(await validateMigrationData(
+          fromProject.name,
+          fromProject.dbName,
+          toProject.name,
+          fromProject.dbName
+        ))
+      ) {
         return;
       }
     }
@@ -146,66 +112,59 @@ export default {
      */
 
     // Run the Docker containers
-    console.log(colorize(`Launch Docker containers of ${fromName}...`, Colors.FgGreen));
-    process.chdir(fromAbs);
-    await docker.dockerComposeUp();
-
-    // Wait a bit
-    console.log(colorize("Wait for the containers to be fully initialized...", Colors.FgGreen));
-    await sleep(5000);
+    console.log(`Launching Docker containers of ${fromProject.name}...`);
+    await fromProject.up();
 
     // Dump the database 'from'
-    console.log(colorize(`Extract the dump from the database of ${fromName}...`, Colors.FgGreen));
-    const fromWordpressContainerName = await docker.getCurrentWordpressContainer();
-    const fromDbIpAddress = await docker.getDbContainerIpAddress();
-    const dumpCommand = `docker exec ${fromWordpressContainerName} bash -c "mysqldump -h ${fromDbIpAddress} -u ${fromUsername} -p${fromPassword} --databases ${fromDatabase} > temp_dump.sql"`;
-    await run(dumpCommand);
+    console.log(`Extracting the dump from the database of ${fromProject.name}...`);
+    await fromProject.dump(migrationFile);
 
     // Stop the Docker containers 'from'
-    console.log(colorize(`Stop Docker containers of ${fromName}...`, Colors.FgGreen));
-    await docker.dockerComposeDown();
+    console.log(`Stopping Docker containers of ${fromProject.name}...`);
+    await fromProject.down();
+
+    /**
+     * PREPARING THE MIGRATION
+     */
 
     // Move the dump to destination
-    console.log(colorize(`Move the migration to ${toName}...`, Colors.FgGreen));
-    fs.renameSync(`${fromAbs}/temp_dump.sql`, `${toAbs}/temp_dump.sql`);
+    console.log(`Moving the migration to ${toProject.name}...`);
+    fromProject.moveFile(migrationFile, `${toProject.path}`);
 
     // Modify the migration to use proper Database name
-    let fileContent = fs.readFileSync(`${toAbs}/temp_dump.sql`, 'utf8');
-    fileContent = fileContent.replaceAll(`\`${fromDatabase}\``, `\`${toDatabase}\``);
-    fs.writeFileSync(`${toAbs}/temp_dump.sql`, fileContent, 'utf8');
+    let fileContent = toProject.readFile(migrationFile);
+    fileContent = fileContent.replaceAll(
+      `\`${fromProject.dbName}\``,
+      `\`${toProject.dbName}\``
+    );
+    toProject.writeFile(migrationFile, fileContent);
+
+    /**
+     * PERFORMING THE MIGRATION
+     */
 
     // Run the Docker containers 'to'
-    console.log(colorize(`Launch Docker containers of ${toName}...`, Colors.FgGreen));
-    process.chdir(toAbs);
-    await docker.dockerComposeUp();
-
-    // Wait a bit
-    console.log(colorize("Wait for the containers to be fully initialized...", Colors.FgGreen));
-    await sleep(5000);
+    console.log(`Launching Docker containers of ${toProject.name}...`);
+    await toProject.up();
 
     // Apply dump 'to'
-    const toWordpressContainerName = await docker.getCurrentWordpressContainer();
-    const toDbIpaddress = await docker.getDbContainerIpAddress();
+    console.log(`Dropping the database...`);
+    await toProject.dropDatabase();
 
-    console.log(colorize(`Apply the migration to the database of ${toName}...`, Colors.FgGreen));
-    const dropDatabaseCommand = `docker exec ${toWordpressContainerName} bash -c "mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} -e 'DROP DATABASE ${toDatabase};'"`;
-    const applyMigrationCommand = `docker exec ${toWordpressContainerName} bash -c "mysql -h ${toDbIpaddress} -u ${toUsername} -p${toPassword} < temp_dump.sql"`; 
-    
-    try {
-      await run(dropDatabaseCommand);
-    }
-    catch (_e) {}
-    
-    await run(applyMigrationCommand);
-
+    console.log(`Applying the migration to ${toProject.name}...`);
+    await toProject.applyMigration(migrationFile);
 
     // Stop the Docker containers 'to'
-    console.log(colorize(`Stop Docker containers of ${toName}...`, Colors.FgGreen));
-    await docker.dockerComposeDown();
+    console.log(`Stopping Docker containers of ${toProject.name}...`);
+    await toProject.down();
+
+    /**
+     * CLEANING UP
+     */
 
     // Cleaning temp files
-    console.log(colorize(`Cleaning the migration file from ${toName}...`, Colors.FgGreen));
-    fs.rmSync(`${toAbs}/temp_dump.sql`);
+    console.log(`Cleaning the migration file from ${toProject.name}...`);
+    toProject.deleteFile(migrationFile);
 
     /**
      * END
@@ -214,13 +173,3 @@ export default {
     console.log(colorize("Migration completed!", Colors.FgGreen));
   },
 };
-
-/**
- * Get a readable project name from its path.
- * @param {string} projectPath Path to the project to get the name of.
- * @returns {string} The name of the project.
- */
-function getProjectName(projectPath) {
-  const sliceIndex = projectPath.lastIndexOf("\\") + 1;
-  return projectPath.slice(sliceIndex);
-}

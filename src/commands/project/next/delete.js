@@ -1,4 +1,4 @@
-import run from "../../../utils/bash.js";
+import { run } from "../../../utils/bash.js";
 import Colors, { colorize } from "../../../utils/colors.js";
 import { deleteRepo } from "../../../utils/github.js";
 import header from "../../../utils/header.js";

@@ -1,4 +1,4 @@
-import run from "../../../utils/bash.js";
+import { run } from "../../../utils/bash.js";
 import Colors, { colorize } from "../../../utils/colors.js";
 import { addRemote, changeBranch, createBranch, gitClone, setRemote } from "../../../utils/git.js";
 import { addWebhooks, createRepo, repoExists } from "../../../utils/github.js";

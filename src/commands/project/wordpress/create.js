@@ -3,14 +3,13 @@ import Colors, { colorize } from "../../../utils/colors.js";
 import header from "../../../utils/header.js";
 import DockerUtils from "../../../utils/docker.js";
 import {
-  ask,
   createFolder,
   validateCreateProjectData,
 } from "../../../utils/helpers.js";
 import { addRemote, changeBranch, createBranch, gitClone, setRemote } from "../../../utils/git.js";
 import { addWebhooks, createRepo, repoExists } from "../../../utils/github.js";
 import prompts from "prompts";
-import run from "../../../utils/bash.js";
+import { run } from "../../../utils/bash.js";
 
 export default {
   command: "wordpress <projectName> [path]",
@@ -36,6 +35,7 @@ export default {
     const projectPath = argv.path + "/" + argv.projectName;
     const templateWordpressRepo = process.env.TEMPLATE_WORDPRESS_REPO;
     const owner = process.env.GITHUB_OWNER;
+    const docker = await DockerUtils.create();
 
     /**
      * HEADER
@@ -65,36 +65,8 @@ export default {
     }
 
     // Docker containers
-    let docker = new DockerUtils();
-    let containers = await docker.getRunningContainers();
-    if (containers.length > 0) {
-      console.log(
-        colorize("You have some Docker containers running.", Colors.FgRed)
-      );
-      console.log(
-        colorize(
-          "In order to create a new project, these containers need to be turned off.",
-          Colors.FgYellow
-        )
-      );
-      if (
-        !(await ask(
-          "Is it safe to remove these containers?",
-          "Great, proceeding.",
-          "Ensure those containers are not running or that they can be safely removed, and then launch the script again."
-        ))
-      ) {
-        return;
-      }
-
-      console.log("Stopping and removing container...");
-      await docker.stopContainers(containers);
-      await docker.deleteContainers(containers);
-      console.log(colorize("Done.", Colors.FgGreen));
-      console.log();
-    }
-
-    console.log(colorize("No Docker container running", Colors.FgGreen));
+    console.log("Checking Docker containers...");
+    await docker.safelyRemoveContainers();
 
     /**
      * VALIDATION
