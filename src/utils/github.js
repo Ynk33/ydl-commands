@@ -33,7 +33,7 @@ export async function listRepos() {
 /**
  * Check if the given repo already exists or not.
  * @param {string} repoName Name of the repo.
- * @returns {boolean} True if the repo exists, false otherwise.
+ * @returns {Promise<boolean>} True if the repo exists, false otherwise.
  */
 export async function repoExists(repoName) {
   const repos = await listRepos();
@@ -59,7 +59,7 @@ export async function addWebhooks(repoName) {
   let hooksConfigPath = `./hooks-config.json`;
   console.log(`Looking for hooks-config.json...`);
   if (fs.existsSync(hooksConfigPath)) {
-    console.log(colorize("hooks-config.json found.", Colors.FgYellow));
+    console.log(colorize("\thooks-config.json found.", Colors.FgYellow));
     console.log("Adding webhooks...");
     let hooksConfig = JSON.parse(fs.readFileSync(hooksConfigPath));
     await github().repos.createWebhook(Object.assign(
@@ -71,7 +71,7 @@ export async function addWebhooks(repoName) {
     ));
   }
   else {
-    console.log(colorize("hooks-config.json not found. Skipping.", Colors.FgYellow));
+    console.log(colorize("\thooks-config.json not found. Skipping.", Colors.FgYellow));
   }
 }
 

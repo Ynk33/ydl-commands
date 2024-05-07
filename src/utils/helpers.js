@@ -1,5 +1,4 @@
 import prompts from "prompts";
-import fs from "fs";
 import Colors, { colorize } from "./colors.js";
 
 /**
@@ -27,7 +26,6 @@ export async function ask(
 
   if (!response.confirm) {
     console.log();
-    console.log("That's alright. This script will be canceled.");
     console.log(colorize(cancelMessage, cancelMessageColor));
     console.log();
 
@@ -36,53 +34,6 @@ export async function ask(
 
   console.log(colorize(confirmMessage, confirmMessageColor));
   console.log();
-  return true;
-}
-
-/**
- * Check whether the folder at provided path is empty.
- * @param {string} folderPath Path to the folder to check. Can be relative or absolute.
- * @returns {boolean} True if the folder is empty, false otherwise.
- */
-export function isFolderEmpty(folderPath) {
-  return fs.readdirSync(folderPath).length === 0;
-}
-
-/**
- * Checks if the folder exists.
- * @param {string} folderPath Path of the folder to check
- * @returns {boolean} True if the folder exists. False otherwise.
- */
-export function folderExists(folderPath) {
-  return fs.existsSync(folderPath);
-}
-
-/**
- * Check if the folder exists and if it is empty, creates it if it's necessary. Returns false if the folder exists and is not empty.
- * @param {string} folderPath Path of the folder you want to create
- * @returns {boolean} True if the folder exists and is empty, or if it was created. False otherwise.
- */
-export function createFolder(folderPath) {
-  if (folderExists(folderPath)) {
-    if (!isFolderEmpty(folderPath)) {
-      console.log(
-        colorize("The folder ", Colors.FgRed) +
-          folderPath +
-          colorize(" already exists and is not empty.", Colors.FgRed)
-      );
-      console.log(
-        "Check again your " +
-          colorize("projectName", Colors.FgBlue) +
-          " and your " +
-          colorize("path", Colors.FgBlue) +
-          "."
-      );
-      console.log();
-
-      return false;
-    }
-  }
-
   return true;
 }
 

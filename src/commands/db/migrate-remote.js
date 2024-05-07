@@ -72,6 +72,10 @@ export default {
       return;
     }
 
+    // Checking the database info
+    fromProject.fetchDatabaseInfo();
+    toProject.fetchDatabaseInfo();
+
     console.log();
     console.log(colorize("Everything is ready.", Colors.FgGreen));
     console.log();

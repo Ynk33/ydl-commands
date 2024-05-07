@@ -1,13 +1,14 @@
 import fs from "fs";
 import { resolve } from "path";
 import { run } from "../utils/bash.js";
-import { sleep } from "../utils/helpers.js";
+import { ask, sleep } from "../utils/helpers.js";
 import DockerUtils from "../utils/docker.js";
+import GitEnvironment from "./git-environment.js";
 
 export default class Project {
-  // Name of the project.
+  // Name of the Project.
   #name = "";
-  // Absolute path to the project.
+  // Absolute path to the Project.
   #path = "";
 
   /**
@@ -15,6 +16,12 @@ export default class Project {
    * @type {DockerUtils}
    */
   #docker = null;
+
+  /**
+   * The GitEnvironment of this Project.
+   * @type {GitEnvironment}
+   */
+  #git = undefined;
 
   // DB info storage.
   #dbInfo = null;
@@ -35,7 +42,7 @@ export default class Project {
       this.#path = `${resolve(path)}/${this.#name}`;
     }
 
-    this.#fetchDatabaseInfo();
+    this.#git = new GitEnvironment(this);
   }
 
   /**
@@ -75,6 +82,35 @@ export default class Project {
    */
   hasADockerContainer() {
     return fs.existsSync(this.#path + "/docker-compose.yml");
+  }
+
+  /**
+   * Fetches the database information from the docker-compose.yml file of the Project.
+   */
+  fetchDatabaseInfo() {
+    this.#validateProjectExists();
+    this.#validateDockerProject();
+
+    const dockerCompose = fs.readFileSync(`${this.#path}/docker-compose.yml`, {
+      encoding: "utf8",
+    });
+
+    this.#dbInfo = {
+      database: dockerCompose.match(/- WORDPRESS_DB_NAME=(.*)/m)[1],
+      username: dockerCompose.match(/- WORDPRESS_DB_PASSWORD=(.*)/m)[1],
+      password: dockerCompose.match(/- WORDPRESS_DB_USER=(.*)/m)[1],
+    };
+  }
+
+  /**
+   * Initializes a new project.
+   * @param {string} fromTemplate Template to initialise this project from.
+   */
+  async initialize(fromTemplate) {
+    this.#validateEmptyFolder();
+
+    await this.#git.clone(fromTemplate);
+    await this.#git.init();
   }
   
   /**
@@ -206,10 +242,35 @@ export default class Project {
   }
 
   /**
+   * Delete the Project.
+   * @returns {Promise<void>}
+   */
+  async delete() {
+    this.#validateProjectExists();
+
+    // delete the repo
+    if (
+      await ask(
+        "Do you also want to delete the associated repo?",
+        "Great, proceeding.",
+        "Ok, this step will be skipped."
+      )
+    ) {
+      console.log("Deleting the repo...");
+      await this.#git.deleteRepo();
+    }
+
+    // rm files
+    console.log("Deleting all the local files...");
+    fs.rmSync(this.#path, { recursive: true, force: true });
+  }
+
+  /**
    * Fetches the database information from the docker-compose.yml file of the Project.
    * @returns {Array<string>} The database information with the format [ db-name, username, password ].
    */
   #fetchDatabaseInfo() {
+    this.#validateProjectExists();
     this.#validateDockerProject();
 
     const dockerCompose = fs.readFileSync(`${this.#path}/docker-compose.yml`, {
@@ -238,10 +299,41 @@ export default class Project {
   }
 
   /**
+   * Determines if the Project's folder is empty.
+   * @returns {boolean} Whether the Project's folder is empty or not.
+   */
+  #isProjectFolderEmpty() {
+    const folderExist = fs.existsSync(this.#path);
+    if (folderExist) {
+      return fs.readdirSync(this.#path).length === 0;
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if the path to the Project is empty, and throw an error if not.
+   */
+  #validateEmptyFolder() {
+    if (!this.#isProjectFolderEmpty()) {
+      throw new Error(`${this.#path} exists and is not an empty folder.`);
+    }
+  }
+
+  /**
+   * Check if the defined project exists.
+   */
+  #validateProjectExists() {
+    if (this.#isProjectFolderEmpty()) {
+      throw new Error(`The project ${this.#name} at ${this.#path} doesn't exist.`)
+    }
+  }
+
+  /**
    * Check if the Project has a docker-compose.yml file, and throw an error if not.
    */
   #validateDockerProject() {
-    if (!this.hasADockerContainer) {
+    if (!this.hasADockerContainer()) {
       throw new Error("This project doesn't not have a docker-compose file.");
     }
   }

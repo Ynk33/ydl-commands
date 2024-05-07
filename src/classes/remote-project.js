@@ -54,8 +54,6 @@ export default class RemoteProject {
     project.#name = name;
     project.#path = process.env.REMOTE_ROOT_PATH + project.#fullName;
 
-    await project.#fetchDatabaseInfo();
-
     return project;
   }
 
@@ -88,6 +86,23 @@ export default class RemoteProject {
    */
   get #mysqlConnectData() {
     return `-u ${this.#dbInfo.username} -p${this.#dbInfo.password}`;
+  }
+
+  /**
+   * Fetches the database information from the wp-config.php file of the Project.
+   * @returns {Promise<Array<string>>} The database information with the format [ db-name, username, password ].
+   */
+  async fetchDatabaseInfo() {
+    const wpConfig = await this.#ssh.exec("cat", ["wp-config.php"], {
+      cwd: this.#path,
+      stream: "stdout",
+    });
+
+    this.#dbInfo = {
+      database: wpConfig.match(/define\( 'DB_NAME', '(.*)'/m)[1],
+      username: wpConfig.match(/define\( 'DB_USER', '(.*)'/m)[1],
+      password: wpConfig.match(/define\( 'DB_PASSWORD', '(.*)'/m)[1],
+    };
   }
 
   /**
@@ -199,22 +214,5 @@ export default class RemoteProject {
       [],
       { stream: "stdout" }
     );
-  }
-
-  /**
-   * Fetches the database information from the wp-config.php file of the Project.
-   * @returns {Promise<Array<string>>} The database information with the format [ db-name, username, password ].
-   */
-  async #fetchDatabaseInfo() {
-    const wpConfig = await this.#ssh.exec("cat", ["wp-config.php"], {
-      cwd: this.#path,
-      stream: "stdout",
-    });
-
-    this.#dbInfo = {
-      database: wpConfig.match(/define\( 'DB_NAME', '(.*)'/m)[1],
-      username: wpConfig.match(/define\( 'DB_USER', '(.*)'/m)[1],
-      password: wpConfig.match(/define\( 'DB_PASSWORD', '(.*)'/m)[1],
-    };
   }
 }

@@ -81,6 +81,10 @@ export default {
       return;
     }
 
+    // Checking the database info
+    fromProject.fetchDatabaseInfo();
+    toProject.fetchDatabaseInfo();
+
     // Turning off any running Docker containers
     console.log("Checking running Docker containers...");
     if (!(await docker.safelyRemoveContainers(silent))) {

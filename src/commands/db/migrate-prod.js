@@ -26,6 +26,10 @@ export default {
 
     const migrationFile = "temp_dump.sql";
 
+    // Checking the database info
+    preprodProject.fetchDatabaseInfo();
+    prodProject.fetchDatabaseInfo();
+
     /**
      * HEADER
      */

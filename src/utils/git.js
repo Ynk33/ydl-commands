@@ -45,6 +45,7 @@ const git = () =>
  * @param {string} repo Repo to clone
  * @param {string} to Path where to clone to
  * @param {boolean} includeSubmodules If set to true, will call git clone with the flag --recurse-submodules (default: false)
+ * @returns {Promise<void>}
  */
 export async function gitClone(repo, to, includeSubmodules = false) {
   const options = {
@@ -65,6 +66,7 @@ export async function gitClone(repo, to, includeSubmodules = false) {
  * Adds a new named remote.
  * @param {string} name Name of the remote.
  * @param {string} url URL of the remote.
+ * @returns {Promise<void>}
  */
 export async function addRemote(name, url) {
   await git().raw(["remote", "add", name, url]);
@@ -74,6 +76,7 @@ export async function addRemote(name, url) {
  * Set the URL of the named remote.
  * @param {string} name Name of the remote.
  * @param {string} url URL of the remote.
+ * @returns {Promise<void>}
  */
 export async function setRemote(name, url) {
   await git().raw(["remote", "set-url", name, url]);
@@ -83,6 +86,7 @@ export async function setRemote(name, url) {
  * Create a new branch and push it on remote.
  * @param {string} branch Name of the branch to create.
  * @param {boolean} commit Should a commit be done before pushing? (default: false)
+ * @returns {Promise<void>}
  */
 export async function createBranch(branch, commit = false) {
   await git()
@@ -98,12 +102,14 @@ export async function createBranch(branch, commit = false) {
       "[IGNORE-WEBHOOKS] First commit, project setup",
     ]);
   }
+  startGitProgress(4);
   await git().push("origin", branch, ["--no-verify"]);
+  stopGitProgress();
 }
 
 /**
  * Get the current branch of the repo.
- * @returns {string | undefined} The current branch.
+ * @returns {Promise<string | undefined>} The current branch.
  */
 export async function getCurrentBranch() {
   const branches = await git().branch();
@@ -121,6 +127,7 @@ export async function getCurrentBranch() {
 /**
  * Checkout the repo to the branch.
  * @param {string} branch Branch to move to.
+ * @returns {Promise<void>}
  */
 export async function changeBranch(branch) {
   await git().checkout(branch);
@@ -129,7 +136,7 @@ export async function changeBranch(branch) {
 /**
  * Check if the project has the remote.
  * @param {string} remote Name of the remote.
- * @returns {boolean} True if the remote exists, false otherwise.
+ * @returns {Promise<boolean>} True if the remote exists, false otherwise.
  */
 export async function hasRemote(remote) {
   const remotes = await git().remote();
@@ -140,6 +147,7 @@ export async function hasRemote(remote) {
  * Performs a fetch on the remote, with the current branch.
  * @param {string} remote Name of the remote.
  * @param {string} branch Name of the branch to fetch.
+ * @returns {Promise<void>}
  */
 export async function gitFetch(remote, branch = "") {
   await git().raw("fetch", remote, branch);
@@ -150,7 +158,7 @@ export async function gitFetch(remote, branch = "") {
  * @param {string} remote Name of the remote.
  * @param {string} branch Name of the branch.
  * @param {number} limit Number of commits to retrieve.
- * @returns List of the last commits.
+ * @returns {Promise<Array>} List of the last commits.
  */
 export async function getCommitsList(remote, branch = undefined, limit = 10) {
   let currentBranch = branch;
@@ -169,6 +177,7 @@ export async function getCommitsList(remote, branch = undefined, limit = 10) {
 /**
  * Perform a git cherry-pick on a selection of commits.
  * @param {Array<string>} commits List of commit's hashes to cherry-pick.
+ * @returns {Promise<void>}
  */
 export async function cherryPick(commits) {
   await git().raw("cherry-pick", "--keep-redundant-commits", ...commits);
