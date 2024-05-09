@@ -84,10 +84,15 @@ export default {
     // Initialize the project.
     await project.initialize(templateWordpressRepo);
 
+    // Launch docker compose for the first time
+    console.log(colorize("Launching the Docker container for the first time...", Colors.FgYellow));
+    await project.up();
+
     // Migrate YankaWordpress DB to this project
     const response = await prompts({
       type: "text",
       name: "templatePath",
+      initial: "../YankaWordpress",
       message: `Where is your installation of ${templateWordpressName} (pwd: ${process.cwd()})?`,
       validate: (templatePath) =>
         !fs.existsSync(templatePath)

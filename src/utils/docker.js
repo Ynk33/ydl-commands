@@ -90,15 +90,17 @@ export default class DockerUtils {
    */
   async safelyRemoveContainers(silent = false) {
     if (this.#containers.length > 0) {
-      console.log(
-        colorize("You have some Docker containers running.", Colors.FgRed)
-      );
-      console.log(
-        colorize(
-          "In order for this command to run, these containers need to be turned off.",
-          Colors.FgYellow
-        )
-      );
+      silent &&
+        console.log(
+          colorize("You have some Docker containers running.", Colors.FgRed)
+        );
+      silent &&
+        console.log(
+          colorize(
+            "In order for this command to run, these containers need to be turned off.",
+            Colors.FgYellow
+          )
+        );
       if (!silent) {
         if (
           !(await ask(
@@ -111,11 +113,13 @@ export default class DockerUtils {
         }
       }
 
-      console.log("Stopping and removing container...");
+      silent && console.log("Stopping and removing container...");
+
       await this.#stopAllContainers();
       await this.#deleteAllContainers();
-      console.log(colorize("Done.", Colors.FgGreen));
-      console.log();
+      
+      silent && console.log(colorize("Done.", Colors.FgGreen));
+      silent && console.log();
     }
 
     return true;
