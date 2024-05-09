@@ -60,11 +60,11 @@ export async function validateCreateProjectData(
   projectPath,
   templateRepo
 ) {
-  console.log(colorize("The project name is ", Colors.FgGreen) + projectName);
+  console.log(colorize("The project name is ", Colors.FgYellow) + projectName);
   console.log(
-    colorize("The project will be created at ", Colors.FgGreen) +
+    colorize("The project will be created at ", Colors.FgYellow) +
       projectPath +
-      colorize(" using the template ", Colors.FgGreen) +
+      colorize(" using the template ", Colors.FgYellow) +
       templateRepo
   );
 
@@ -72,10 +72,10 @@ export async function validateCreateProjectData(
   return await ask(
     "Are the information above correct?",
     "Great, proceeding.",
-    "Ensure you enter the correct " +
-      colorize("projectName", Colors.FgBlue) +
+    colorize("Ensure you enter the correct ", Colors.FgYellow) +
+      "projectName" +
       colorize(" and the correct ", Colors.FgYellow) +
-      colorize("path", Colors.FgBlue) +
+      "path" +
       colorize(" next time ;)", Colors.FgYellow)
   );
 }
@@ -87,9 +87,9 @@ export async function validateCreateProjectData(
  */
 export async function validateDeleteProjectData(projectName) {
   console.log(
-    colorize("The project ", Colors.FgGreen) +
+    colorize("The project ", Colors.FgYellow) +
       projectName +
-      colorize(" will be deleted", Colors.FgGreen)
+      colorize(" will be deleted", Colors.FgYellow)
   );
 
   console.log();
@@ -110,8 +110,8 @@ export async function validateDeleteProjectData(projectName) {
  */
 export async function validateMigrationData(fromProject, fromDatabase, toProject, toDatabase ) {
   console.log(
-    colorize("The database ", Colors.FgGreen) + fromProject + "." + fromDatabase +
-    colorize(" will be migrated to the database ", Colors.FgGreen) + toProject + "." + toDatabase
+    colorize("The database ", Colors.FgYellow) + fromProject + "." + fromDatabase +
+    colorize(" will be migrated to the database ", Colors.FgYellow) + toProject + "." + toDatabase
   );
 
   console.log();
